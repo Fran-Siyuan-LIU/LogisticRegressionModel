@@ -5,7 +5,7 @@ import pandas as pd
 class LogisticRegression(object):
 
     '''
-    Logistic Regression Classifier, with gradient descent cal
+    Logistic Regression Classifier, with gradient descent algorithm to optimize
 
     You may regard each of this new LR model as a blank key fob
     After you add X and y into the model and fit it, it becomes a model to predict certain result
@@ -34,11 +34,11 @@ class LogisticRegression(object):
 
     # the initialize of the model
 
-    def __init__(self, eta = 0.05, n_iter = 100, random_state = 1):
+    def __init__(self, eta = 0.05, n_iter = 100, random_state = 1, tol = 1e-5):
         self.eta = eta
         self.n_iter = n_iter
         self.random_state = random_state
-
+        self.tol = tol
 
 
     # tools for fit
@@ -47,13 +47,18 @@ class LogisticRegression(object):
         '''
         to predict the result based on the current weight
         '''
-        return np.dot(X, self.w__[1: ]) + self.w__[0]
+        return (np.dot(X, self.w__[1: ]) + self.w__[0])
     
     def phi(self, z):
         '''
         compute the logistic sigmoid activation
         '''
         return 1.0 / (1.0 + np.exp(-np.clip(z, -250, 250)))
+
+    def abs(self, a):
+        if(a < 0):
+            return -a
+        return a
 
 
 
@@ -90,13 +95,19 @@ class LogisticRegression(object):
             phi_z = self.phi(z)
 
             # calculate the errors and modify the weight based on the result and learning rate
-            errors = (y - phi_z)
-            self.w__[1: ] += self.eta * np.dot(X.T, errors)
+            errors = (y.T[0] - phi_z)
+            t = self.eta * np.dot(X.T, errors)
+            #print(y.T[0])
+            self.w__[1: ] += t
             self.w__[0] += self.eta * errors.sum()
 
             # the logistic cost
-            cost = np.dot(-y, np.log(phi_z)) - np.dot((1 - y), np.log(1 - phi_z))
+            cost = np.dot(-y.T, np.log(phi_z)) - np.dot((1 - y).T, np.log(1 - phi_z))
             self.cost__.append(cost)
+
+            # stop if converged
+            if(self.abs(self.cost__[-1] - self.abs(self.cost__[-2])) < self.tol):
+                break
 
         return self
     
@@ -118,3 +129,13 @@ class LogisticRegression(object):
         print("eta = " + str(self.eta))
         print("n_iter = " + str(self.n_iter))
         print("ramdom_state = " + str(self.random_state))
+
+
+x = pd.DataFrame([[1, 2],[2, 1],[1,3]])
+#x = np.array(x)
+
+y = pd.DataFrame([1, 0, 1])
+y = np.array(y)
+sol = LogisticRegression()
+sol.fit(x, y)
+print(sol.net_input(x))
